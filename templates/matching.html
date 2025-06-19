@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Matches - Lost and Found Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px; /* Added padding to body for overall spacing */
+            display: flex;
+            flex-direction: column; /* Allow content to stack vertically */
+            justify-content: flex-start; /* Align items to the start to allow scrolling */
+            align-items: center; /* Keep content horizontally centered */
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a, #5b21b6, #0f172a);
+            color: #e5e7eb;
+            position: relative;
+            overflow-x: hidden; /* Hide horizontal overflow from falling icons */
+            overflow-y: auto; /* Allow vertical scrolling when content overflows */
+            box-sizing: border-box;
+        }
+        .background-overlay {
+            position: fixed; /* Use fixed to keep it in viewport during scroll */
+            inset: 0;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(6, 182, 212, 0.1));
+            animation: pulse 8s infinite;
+        }
+        .background-depth {
+            position: fixed; /* Use fixed to keep it in viewport during scroll */
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.2), transparent 70%);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.3; }
+        }
+        .floating-icons {
+            position: fixed; /* Use fixed to keep them in viewport during scroll */
+            inset: 0;
+            pointer-events: none;
+        }
+        .floating-icon {
+            position: absolute;
+            opacity: 0.5;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .floating-icon:hover {
+            opacity: 0.8;
+            transform: scale(1.5);
+        }
+        @keyframes fall {
+            0% {
+                top: -20px;
+                opacity: 0.5;
+                transform: translateX(0) scale(1) rotate(0deg);
+            }
+            20% {
+                transform: translateX(30px) scale(1.2) rotate(90deg);
+            }
+            40% {
+                transform: translateX(-30px) scale(1.1) rotate(180deg);
+            }
+            60% {
+                transform: translateX(15px) scale(0.9) rotate(270deg);
+            }
+            80% {
+                transform: translateX(-15px) scale(0.8) rotate(360deg);
+            }
+            100% {
+                top: 100%;
+                opacity: 0;
+                transform: translateX(0) scale(0.8) rotate(450deg);
+            }
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 10;
+            margin-top: 20px; /* Add margin to top and bottom to prevent sticking to edges */
+            margin-bottom: 20px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #ffffff, #d8b4fe, #a5f3fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: fadeIn 0.8s ease-in;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            padding: 25px 30px;
+            margin-bottom: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        }
+        p {
+            margin: 8px 0;
+            font-size: 1rem;
+            color: #d1d5db;
+        }
+        strong {
+            color: #a5f3fc;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #d8b4fe, #a5f3fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: bold;
+        }
+        .no-matches {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #9ca3af;
+            margin-top: 40px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h2 {
+                font-size: 2rem;
+            }
+            .card {
+                padding: 20px 25px;
+            }
+        }
+        @media (max-width: 500px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h2 {
+                font-size: 1.8rem;
+            }
+            .card {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    <div class="background-depth"></div>
+    <div class="floating-icons">
+        <div class="floating-icon" style="left: 5%; animation: fall 6s ease-in-out infinite; animation-delay: 0s; width: 24px; height: 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 15%; animation: fall 8s ease-in-out infinite; animation-delay: 1s; width: 20px; height: 20px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"></path>
+                <circle cx="12" cy="9" r="3"></circle>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 25%; animation: fall 7s ease-in-out infinite; animation-delay: 2s; width: 28px; height: 28px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 35%; animation: fall 9s ease-in-out infinite; animation-delay: 0.5s; width: 16px; height: 16px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 45%; animation: fall 5s ease-in-out infinite; animation-delay: 1.5s; width: 24px; height: 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 55%; animation: fall 10s ease-in-out infinite; animation-delay: 2.5s; width: 20px; height: 20px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+                <path d="M12 11c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-2.2 0-4 1.8-4 4v2h8v-2c0-2.2-1.8-4-4-4z"></path>
+                <path d="M17 11h3v5h-3z"></path>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 65%; animation: fall 7.5s ease-in-out infinite; animation-delay: 3s; width: 28px; height: 28px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 75%; animation: fall 6.5s ease-in-out infinite; animation-delay: 1.8s; width: 16px; height: 16px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 85%; animation: fall 8.5s ease-in-out infinite; animation-delay: 0.8s; width: 24px; height: 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 95%; animation: fall 9.5s ease-in-out infinite; animation-delay: 2.2s; width: 20px; height: 20px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 10%; animation: fall 5s ease-in-out infinite; animation-delay: 4s; width: 28px; height: 28px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 20%; animation: fall 7s ease-in-out infinite; animation-delay: 3.5s; width: 16px; height: 16px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"></path>
+                <circle cx="12" cy="9" r="3"></circle>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 30%; animation: fall 9s ease-in-out infinite; animation-delay: 2.8s; width: 24px; height: 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 40%; animation: fall 6s ease-in-out infinite; animation-delay: 1.2s; width: 20px; height: 20px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 50%; animation: fall 8s ease-in-out infinite; animation-delay: 0.5s; width: 28px; height: 28px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 60%; animation: fall 10s ease-in-out infinite; animation-delay: 3.2s; width: 16px; height: 16px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+                <path d="M12 11c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-2.2 0-4 1.8-4 4v2h8v-2c0-2.2-1.8-4-4-4z"></path>
+                <path d="M17 11h3v5h-3z"></path>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 70%; animation: fall 5.5s ease-in-out infinite; animation-delay: 4.5s; width: 24px; height: 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 80%; animation: fall 7.5s ease-in-out infinite; animation-delay: 2.1s; width: 20px; height: 20px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 90%; animation: fall 9s ease-in-out infinite; animation-delay: 1.7s; width: 28px; height: 28px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+        </div>
+        <div class="floating-icon" style="left: 0%; animation: fall 6.5s ease-in-out infinite; animation-delay: 3.8s; width: 16px; height: 16px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+        </div>
+    </div>
+    <div class="container">
+        <h2>Potential Matches</h2>
+
+        {% if matches %}
+            {% for match in matches %}
+                <div class="card">
+                    <div class="section-title">Lost Item Information</div>
+                    <p><strong>Item Name:</strong> {{ match.lost_item_name}}</p>
+                    <p><strong>Owner Phone:</strong> {{ match.lost_phone_no }}</p>
+                    <p><strong>Description:</strong> {{ match.lost_description }}</p>
+                    <p><strong>Date Lost:</strong> {{ match.lost_date }}</p>
+                    
+                    <div class="section-title">Found Item Information</div>
+                    <p><strong>Item Name:</strong> {{ match.found_item_name }}</p> 
+                    <p><strong>Finder Phone:</strong> {{ match.found_phone_no }}</p>
+                    <p><strong>Description:</strong> {{ match.found_description }}</p>
+                    <p><strong>Date Found:</strong> {{match.found_date }}</p>
+
+                    <div class="section-title">Match Details</div>
+                    <p><strong>Similarity Score:</strong> {{ '%.2f'|format(match.similarity_score) }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-matches">No matches found.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
